@@ -6,7 +6,7 @@ Installation & Execution :
 Download heroku toolbelt : https://toolbelt.heroku.com/
 
 2- 
-git clone https://github.com/dsebban/blog-post-1.git
+git clone https://github.com/dsebban/blog-post-2.git
 
 3- 
 mvn package
