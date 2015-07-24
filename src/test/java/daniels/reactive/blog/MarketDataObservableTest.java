@@ -10,6 +10,7 @@ import lombok.val;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
+import static daniels.reactive.blog.ib.Instruments.*;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -36,14 +37,20 @@ public class MarketDataObservableTest {
     @Test
     public void twoPricesWithinTheSameSecondProducesOneMinuteBar() throws InterruptedException {
 
-        val priceAtMinute1Sec0 =  event(time(minute(1), sec(0)), price(10.0));
-        val priceAtMinute1Sec30 =  event(time(minute(1), sec(30)), price(20.0));
-        val priceAMinute2Sec1 =    event(time(minute(2), sec(1)), price(20.0));
+        val priceAtMinute1Sec0A =  event(APPL,time(minute(1), sec(0)), price(10.0));
+        val priceAtMinute1Sec30A =  event(APPL,time(minute(1), sec(30)), price(20.0));
+        val priceAMinute2Sec1A =    event(APPL,time(minute(2), sec(1)), price(20.0));
+
+        val priceAtMinute1Sec0G =  event(GOOG,time(minute(1), sec(0)), price(10.0));
+        val priceAtMinute1Sec30G =  event(GOOG,time(minute(1), sec(30)), price(20.0));
+        val priceAMinute2Sec1G =    event(GOOG,time(minute(2), sec(1)), price(20.0));
 
         observable.aggregateLiveMinuteBar();
 
-        assertThatWhenPush(l(priceAtMinute1Sec0, priceAtMinute1Sec30,priceAMinute2Sec1),
-                produces(minuteBar(time(minute(1), sec(30)), price(20.0))));
+        assertThatWhenPush(l(priceAtMinute1Sec0A,priceAtMinute1Sec0G, priceAtMinute1Sec30A,priceAtMinute1Sec30G,priceAMinute2Sec1A,priceAMinute2Sec1G),
+                produces(
+                        minuteBar(GOOG,time(minute(1), sec(30)), price(20.0)),
+                        minuteBar(APPL, time(minute(1), sec(30)), price(20.0))));
 
     }
 
@@ -72,7 +79,7 @@ public class MarketDataObservableTest {
         push.forEach(observable::push);
 
         try {
-            boolean succeed = latch.await(500, TimeUnit.MILLISECONDS );
+            boolean succeed = latch.await(3000, TimeUnit.MILLISECONDS );
             if(!succeed) fail("no element produced");
 
         } catch (InterruptedException e) {
@@ -82,12 +89,12 @@ public class MarketDataObservableTest {
     }
 
 
-    LivePriceEvent event(long time , BigDecimal p){
-        return new LivePriceEvent(time, Instruments.APPL.val(),p);
+    LivePriceEvent event(Instruments ins,long time , BigDecimal p){
+        return new LivePriceEvent(time, ins.val(),p);
     }
 
-    LiveBarEvent minuteBar(long time , BigDecimal p){
-        return new LiveBarEvent(TimeUnit.MINUTES,time, Instruments.APPL.val(),p);
+    LiveBarEvent minuteBar(Instruments ins,long time , BigDecimal p){
+        return new LiveBarEvent(TimeUnit.MINUTES,time, ins.val(),p);
     }
 
 

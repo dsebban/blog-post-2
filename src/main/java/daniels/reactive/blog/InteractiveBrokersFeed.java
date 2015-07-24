@@ -27,11 +27,13 @@ public class InteractiveBrokersFeed {
     private static AtomicInteger clientId = new AtomicInteger(3);
 
     public void subscribeRealTimeData(Instrument instrument) {
-        controller.reqTopMktData(instrument.ibContract, "232", false, new ApiController.ITopMktDataHandler() {
+        controller.reqTopMktData(instrument.ibContract, "232", false, new ApiController.ITopMktDataHandler()
+        {
             @Override
             public void tickPrice(TickType tickType, double price, int canAutoExecute) {
 
-                if(tickType == TickType.ASK) {
+                if (tickType == TickType.ASK)
+                {
                     log.info("IB tick " + new Date() + " price " + price);
                     LivePriceEvent priceEvent = new LivePriceEvent(System.currentTimeMillis(), instrument, new BigDecimal(price).setScale(3, RoundingMode.UP));
                     marketDataObservable.push(priceEvent);

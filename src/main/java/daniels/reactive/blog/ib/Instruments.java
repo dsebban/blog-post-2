@@ -10,6 +10,8 @@ import java.math.BigDecimal;
  */
 public enum Instruments {
     APPL("AAPL" , "USD", Types.SecType.STK , "SMART","201506",1d) ,
+    GOOG("GOOG" , "USD", Types.SecType.STK , "SMART","201506",1d) ,
+
     ES201506("ES","USD", Types.SecType.FUT,"GLOBEX","201506",50.0d) ,
 
     VIX201503("VIX","USD", Types.SecType.FUT,"CFE","201503",1000.0d) ,
