@@ -35,29 +35,42 @@ public class MarketDataObservable {
                 flatMap(grouped -> grouped.buffer(2, 1)). // take each 2 consecutive events
                 //until here same as Part 1
 
-                //instead of subscribe we use flatMap , to produce a fresh observable
+
+                //1. instead of subscribe we use flatMap , to produce a fresh observable
                 flatMap(listOf2 ->
 
+                        //2. ---Generate One Minute Bar Task -----
+                        Observable.defer(() -> {
+                            //Logic to check if the minute has been crossed
 
-                //each time some one will subscribe look
-                Observable.defer(() -> {
-                    LivePriceEvent lastEvent = listOf2.get(0);
-                    int lastMinute = new DateTime(lastEvent.getCreateTimestamp()).minuteOfHour().get();
-                    int currentMinute = new DateTime(listOf2.get(1).getCreateTimestamp()).minuteOfHour().get();
-                    //when minute is crossed , we push the result back in the observable to make it available to other subscribers
-                    if (lastMinute != currentMinute) {
-                        System.out.println("[generating minute bar]" + Thread.currentThread().getName());
-                        return Observable.just(new LiveBarEvent(TimeUnit.MINUTES, lastEvent.createTimestamp, lastEvent.getInstrument(), lastEvent.getPrice()));
-                    }
-                    System.out.println("[ignoring event ]" + Thread.currentThread().getName());
-                    return Observable.empty();
+                            //simulate heavy computation
+                            sleepALittle();
 
-                }).
-//                        doOnEach(Utils::printInfo).
-//                        doOnSubscribe(() -> System.out.println("[subscribing ]" + Thread.currentThread().getName())).
-                        subscribeOn(Schedulers.from(Executors.newSingleThreadExecutor()))).
+                            LivePriceEvent lastEvent = listOf2.get(0);
+                            int lastMinute = new DateTime(lastEvent.getCreateTimestamp()).minuteOfHour().get();
+                            int currentMinute = new DateTime(listOf2.get(1).getCreateTimestamp()).minuteOfHour().get();
+                            //3. when minute is crossed , we create a new observable with the minute in it
+                            if (lastMinute != currentMinute) {
+                                System.out.println("[generating minute bar]" + Thread.currentThread().getName());
+                                //4.
+                                return Observable.just(new LiveBarEvent(TimeUnit.MINUTES, lastEvent.createTimestamp, lastEvent.getInstrument(), lastEvent.getPrice()));
+                            }
+
+                            System.out.println("[ignoring event ]" + Thread.currentThread().getName());
+                            //5.
+                            return Observable.empty();
+
+                        }).
+                                //6. every Task get executed on the computation thread pool
+                                        subscribeOn(Schedulers.computation()).
+                                doOnEach(Utils::printInfo)
 
 
+        ).//7. end of flatmap
+
+
+
+                //8. push the result back to make it available for subscribers
                 subscribe(this::push);
 
 
@@ -72,6 +85,16 @@ public class MarketDataObservable {
 
         publishSubject.onNext(priceEvent);
     }
+
+
+    private void sleepALittle(){
+        try {
+            TimeUnit.MILLISECONDS.sleep(200);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public void error(Exception e) {
         publishSubject.onError(e);

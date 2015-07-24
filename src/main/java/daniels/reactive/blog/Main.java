@@ -19,7 +19,7 @@ public class Main {
 
         try {
             log.info("waiting for 10 secs for IB TWS to go up");
-            Thread.sleep(10000);
+            Thread.sleep(15000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -28,6 +28,9 @@ public class Main {
         InteractiveBrokersFeed.getInstance().setMarketDataObservable(observable);
         InteractiveBrokersFeed.getInstance().connect();
         InteractiveBrokersFeed.getInstance().subscribeRealTimeData(Instruments.APPL.val());
+        InteractiveBrokersFeed.getInstance().subscribeRealTimeData(Instruments.GOOG.val());
+
+
 
         //run for five minutes
         CountDownLatch latch = new CountDownLatch(5);
